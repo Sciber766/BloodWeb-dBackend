@@ -1,18 +1,17 @@
 // socket.js
-const { Server } = require('socket.io');
-
 let io;
 
-function initSocket(server) {
+function initIO(server) {
+  const { Server } = require('socket.io');
   io = new Server(server, {
     cors: {
-      origin: '*',  // restrict to frontend URLs in prod
+      origin: '*',  // Or specify your frontend domain
       methods: ['GET', 'POST', 'PUT', 'DELETE']
     }
   });
 
   io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
+    console.log('Socket connected:', socket.id);
 
     socket.on('join', (userId) => {
       socket.join(userId);
@@ -20,11 +19,9 @@ function initSocket(server) {
     });
 
     socket.on('disconnect', () => {
-      console.log('User disconnected:', socket.id);
+      console.log('Socket disconnected:', socket.id);
     });
   });
-
-  return io;
 }
 
 function getIO() {
@@ -34,4 +31,4 @@ function getIO() {
   return io;
 }
 
-module.exports = { initSocket, getIO };
+module.exports = { initIO, getIO };
