@@ -92,5 +92,35 @@ router.get('/match', authenticateToken, async (req, res) => {
     }
   });
   
+  // POST /api/request/:id/accept
+router.post('/:id/accept', authenticateToken, async (req, res) => {
+  const requestId = req.params.id;
+  const userId = req.user._id;
+
+  try {
+    const request = await BloodRequest.findById(requestId);
+
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    // Prevent duplicate accepts
+    if (request.pendingAccepts.includes(userId)) {
+      return res.status(400).json({ message: 'You have already accepted this request' });
+    }
+
+    request.pendingAccepts.push(userId);
+    await request.save();
+
+    // ✅ [In the next step] Send notification to requester (req.user.fullName and contact info will be useful here)
+
+    res.status(200).json({ message: 'Request accepted and requester notified' });
+
+  } catch (error) {
+    console.error('Accept request error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
   
 module.exports = router;
