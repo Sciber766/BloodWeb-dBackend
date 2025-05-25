@@ -93,7 +93,7 @@ router.get('/match', authenticateToken, async (req, res) => {
   });
   
   // POST /api/request/:id/accept
-router.post('/:id/accept', authenticateToken, async (req, res) => {
+router.put('/:id/accept', authenticateToken, async (req, res) => {
   const requestId = req.params.id;
   const userId = req.user._id;
 
