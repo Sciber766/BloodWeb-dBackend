@@ -68,30 +68,28 @@ router.get('/match', authenticateToken, async (req, res) => {
       res.status(500).json({ message: 'Failed to fetch matching requests' });
     }
   });
-  
-  router.delete('/api/request/:id', authenticateToken, async (req, res) => {
+
+  router.delete('/:id', authenticateToken, async (req, res) => {
     const requestId = req.params.id;
-    const userId = req.user.id; // Assuming your auth middleware sets req.user
+    const userId = req.user.id;
   
     try {
       const request = await RequestModel.findById(requestId);
-  
       if (!request) {
         return res.status(404).json({ message: 'Request not found' });
       }
   
-      // Verify user owns the request
       if (request.user.toString() !== userId) {
         return res.status(403).json({ message: 'Unauthorized to delete this request' });
       }
   
       await RequestModel.findByIdAndDelete(requestId);
-  
-      return res.status(200).json({ message: 'Request deleted successfully' });
+      res.status(200).json({ message: 'Request deleted successfully' });
     } catch (error) {
       console.error('Delete request error:', error);
-      return res.status(500).json({ message: 'Server error' });
+      res.status(500).json({ message: 'Server error' });
     }
   });
+  
   
 module.exports = router;
