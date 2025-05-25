@@ -80,7 +80,7 @@ router.get('/match', authenticateToken, async (req, res) => {
         return res.status(404).json({ message: 'Request not found' });
       }
   
-      if (request.user.toString() !== userId) {
+      if (request.userId.toString() !== userId) {
         return res.status(403).json({ message: 'Unauthorized to delete this request' });
       }
   
