@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const NotificationSchema = new mongoose.Schema({
   title: { type: String, required: true },
-  message: { type: String, required: true },
+  message: { type: String, required: false },
   details: { type: Map, of: String }, // to store key-value pairs
   date: { type: Date, default: Date.now },
   read: { type: Boolean, default: false }
