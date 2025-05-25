@@ -32,7 +32,13 @@ const bloodRequestSchema = new mongoose.Schema({
         type: String,
         enum: ['Pending', 'Verified', 'Rejected'],
         default: 'Pending'
-    }
+    },
+    pendingAccepts: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }
+    ]
 }, { timestamps: true }); // adds createdAt and updatedAt
 
 module.exports = mongoose.model('BloodRequest', bloodRequestSchema);
