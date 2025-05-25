@@ -84,7 +84,7 @@ router.get('/match', authenticateToken, async (req, res) => {
         return res.status(403).json({ message: 'Unauthorized to delete this request' });
       }
   
-      await RequestModel.findByIdAndDelete(requestId);
+      await bloodRequest.findByIdAndDelete(requestId);
       res.status(200).json({ message: 'Request deleted successfully' });
     } catch (error) {
       console.error('Delete request error:', error);
