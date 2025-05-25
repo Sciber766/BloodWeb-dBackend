@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const BloodRequest = require('../models/bloodRequest');
 const authenticateToken = require('../middleware/auth');
 const bloodRequest = require('../models/bloodRequest');
+const { getIO } = require('../socket');
+const User = require('../models/User');
 
 // POST /api/blood-request
 router.post('/blood-request', authenticateToken, async (req, res) => {
@@ -17,7 +18,7 @@ router.post('/blood-request', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'bloodGroup, urgency, and location are required' });
     }
 
-    const newRequest = new BloodRequest({
+    const newRequest = new bloodRequest({
         bloodGroup,
         urgency,
         name,
@@ -42,7 +43,7 @@ router.post('/blood-request', authenticateToken, async (req, res) => {
 // GET /api/request/mine
 router.get('/mine', authenticateToken, async (req, res) => {
     try {
-      const myRequests = await BloodRequest.find({ userId: req.user._id }).sort({ createdAt: -1 });
+      const myRequests = await bloodRequest.find({ userId: req.user._id }).sort({ createdAt: -1 });
       res.json(myRequests);
       console.log('My Requests:', myRequests); // Debugging line
     } catch (err) {
@@ -58,7 +59,7 @@ router.get('/match', authenticateToken, async (req, res) => {
         return res.status(400).json({ message: 'User blood group not set in profile' });
       }
   
-      const matchedRequests = await BloodRequest.find({
+      const matchedRequests = await bloodRequest.find({
         bloodGroup: userBloodGroup,
         userId: { $ne: req.user._id }  // Exclude self
       }).sort({ createdAt: -1 });
@@ -98,7 +99,7 @@ router.put('/:id/accept', authenticateToken, async (req, res) => {
   const userId = req.user._id;
 
   try {
-    const request = await BloodRequest.findById(requestId);
+    const request = await bloodRequest.findById(requestId);
 
     if (!request) {
       return res.status(404).json({ message: 'Request not found' });
@@ -112,8 +113,26 @@ router.put('/:id/accept', authenticateToken, async (req, res) => {
     request.pendingAccepts.push(userId);
     await request.save();
 
-    // ✅ [In the next step] Send notification to requester (req.user.fullName and contact info will be useful here)
+    const donor = await User.findById(userId).select('fullName phone bloodGroup email');
+    const requester = await User.findById(request.userId);
 
+    if (!requester) {
+      return res.status(404).json({ message: 'Requester user not found' });
+    }
+    const notification = {
+      title: 'Request Accepted',
+      message: `${donor.fullName} has accepted your blood request.`,
+      details: new Map([
+        ['Donor Name', donor.fullName],
+        ['Phone', donor.phone || 'Not Provided'],
+        ['Blood Group', donor.bloodGroup || 'Unknown'],
+        ['Email', donor.email || 'Not Provided']
+      ])
+    };
+    requester.notifications.push(notification);
+    await requester.save();
+    const io = getIO();
+    io.to(requester._id.toString()).emit('notification', notification);
     res.status(200).json({ message: 'Request accepted and requester notified' });
 
   } catch (error) {
@@ -121,6 +140,29 @@ router.put('/:id/accept', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// GET /api/users/notifications
+router.get('/notifications', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId, 'notifications');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Send notifications sorted by date (newest first)
+    const notifications = user.notifications
+      .sort((a, b) => b.date - a.date);
+
+    res.status(200).json({ notifications });
+
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
   
 module.exports = router;

@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
 
+const NotificationSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  message: { type: String, required: true },
+  details: { type: Map, of: String }, // to store key-value pairs
+  date: { type: Date, default: Date.now },
+  read: { type: Boolean, default: false }
+});
+
 const UserSchema = new mongoose.Schema({
   fullName: { type: String, required: true, trim: true },
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
@@ -17,7 +25,9 @@ const UserSchema = new mongoose.Schema({
   availability: { type: Boolean, default: false },
   phone: { type: String },
 
-  emergencyAvailability: { type: Boolean, default: false }
+  emergencyAvailability: { type: Boolean, default: false },
+
+  notifications: [NotificationSchema]
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

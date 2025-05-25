@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const http = require('http');               // <-- add this
+const { Server } = require('socket.io');    // <-- add this
 require('dotenv').config();
 
 const app = express();
@@ -13,24 +15,48 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
+const bloodRequestRoutes = require('./routes/bloodRequest');
+app.use('/api/request', bloodRequestRoutes);
 
-
-  const bloodRequestRoutes = require('./routes/bloodRequest');
-  app.use('/api/request', bloodRequestRoutes);
-  
-// Use /api/auth for authentication-related routes
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 
 const userRoutes = require('./routes/user');
 app.use('/api/user', userRoutes);
 
-
-// Default root route
 app.get('/', (req, res) => {
     res.send('BloodWeb Backend Running');
 });
 
-app.listen(PORT, () => {
+// Create HTTP server from Express app
+const server = http.createServer(app);
+
+// Initialize Socket.IO server
+const io = new Server(server, {
+  cors: {
+    origin: '*',   // Or restrict to your frontend URL(s) for security
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  },
+});
+
+// Setup Socket.IO connection handler
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+
+  socket.on('join', (userId) => {
+    socket.join(userId);
+    console.log(`User ${userId} joined room`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+// Export io if you want to use it in routes/controllers
+module.exports = { io };
+
+// Now listen on the server, NOT app
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
