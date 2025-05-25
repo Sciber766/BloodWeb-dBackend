@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const BloodRequest = require('../models/bloodRequest');
 const authenticateToken = require('../middleware/auth');
+const bloodRequest = require('../models/bloodRequest');
 
 // POST /api/blood-request
 router.post('/blood-request', authenticateToken, async (req, res) => {
@@ -74,7 +75,7 @@ router.get('/match', authenticateToken, async (req, res) => {
     const userId = req.user.id;
   
     try {
-      const request = await RequestModel.findById(requestId);
+      const request = await bloodRequest.findById(requestId);
       if (!request) {
         return res.status(404).json({ message: 'Request not found' });
       }
