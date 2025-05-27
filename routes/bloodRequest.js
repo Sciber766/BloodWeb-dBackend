@@ -9,10 +9,7 @@ const User = require('../models/User');
 router.post('/blood-request', authenticateToken, async (req, res) => {
   try {
     const { bloodGroup, urgency, location } = req.body;
-
-    // You can get name from authenticated user
     const name = req.user.fullName;
-    // Add today's date in preferred format
     const date = new Date().toISOString().split('T')[0]; // e.g., '2025-05-24'
     if (!bloodGroup || !urgency || !location) {
       return res.status(400).json({ message: 'bloodGroup, urgency, and location are required' });
@@ -24,12 +21,23 @@ router.post('/blood-request', authenticateToken, async (req, res) => {
         name,
         date,
         location,
-        userId: req.user._id,  // here you link the request to the authenticated user
-        status: 'Pending'      // default status
+        userId: req.user._id,
+        status: 'Pending'    
     });
 
     const savedRequest = await newRequest.save();
+    const availableDonors = await User.find({
+      _id: { $ne: req.user._id },
+      bloodGroup: bloodGroup,
+      availability: true
+    }).select('_id');
 
+    const io = getIO();
+    availableDonors.forEach((donor) => {
+      io.to(donor._id.toString()).emit('new-blood-request', {
+        request: savedRequest
+      });
+    });
     res.status(201).json({
       message: 'Blood request created successfully',
       data: savedRequest
