@@ -2,7 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const http = require('http');               // <-- add this
-const { Server } = require('socket.io');    // <-- add this
+const { initIO } = require('./socket');
+const server = http.createServer(app);
+initIO(server);
 require('dotenv').config();
 
 const app = express();
@@ -28,9 +30,6 @@ app.get('/', (req, res) => {
     res.send('BloodWeb Backend Running');
 });
 
-// Create HTTP server from Express app
-const server = http.createServer(app);
-
 // Initialize Socket.IO server
 const io = new Server(server, {
   cors: {
@@ -53,10 +52,8 @@ io.on('connection', (socket) => {
   });
 });
 
-// Export io if you want to use it in routes/controllers
 module.exports = { io };
 
-// Now listen on the server, NOT app
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
