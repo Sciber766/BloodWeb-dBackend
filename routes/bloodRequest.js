@@ -121,12 +121,17 @@ router.put('/:id/accept', authenticateToken, async (req, res) => {
     }
     const notification = {
       title: 'Request Accepted',
+      message: `${donor.fullName} has accepted your blood request.`,
       details: new Map([
         ['Donor Name', donor.fullName],
         ['Phone', donor.phone || 'Not Provided'],
         ['Blood Group', donor.bloodGroup || 'Unknown'],
         ['Email', donor.email || 'Not Provided'],
-        ['Accepted At', new Date().toISOString()]
+        ['Accepted At', new Date().toLocaleString('en-IN', {
+          dateStyle: 'medium',
+          timeStyle: 'short'
+        })]
+        
       ]),
       read: true
     };
