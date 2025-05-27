@@ -3,7 +3,6 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const http = require('http');               // <-- add this
 const { initIO } = require('./socket');
-initIO(server);
 require('dotenv').config();
 
 const app = express();
@@ -13,6 +12,8 @@ app.use(cors());
 app.use(express.json());
 
 const server = http.createServer(app);
+initIO(server);
+
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log('MongoDB connected'))
 .catch(err => console.error('MongoDB connection error:', err));
