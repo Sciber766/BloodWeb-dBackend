@@ -31,13 +31,6 @@ app.get('/', (req, res) => {
   res.send('BloodWeb Backend Running');
 });
 
-// Initialize Socket.IO server
-const io = new Server(server, {
-  cors: {
-    origin: '*',   // Or restrict to your frontend URL(s) for security
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  },
-});
 
 // Setup Socket.IO connection handler
 io.on('connection', (socket) => {
