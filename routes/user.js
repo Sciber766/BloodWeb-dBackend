@@ -15,8 +15,8 @@ router.get('/dashboard-data', authenticateToken, async (req, res) => {
 
 // GET profile info (selected fields)
 router.get('/profile', authenticateToken, (req, res) => {
-  const { fullName, age, gender, location } = req.user;
-  res.json({ fullName, age, gender, location });
+  const { fullName, age, gender, location, _id } = req.user;
+  res.json({ fullName, age, gender, location, _id });
 });
 
 // GET blood details
